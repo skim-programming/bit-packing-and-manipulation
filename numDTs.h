@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <string>
 #include <stdexcept>
+#include <bitset>
 // Mostly low level stuff, just working with bit masks, bit operations, etc.
 
 struct numDT1 {
@@ -34,6 +35,27 @@ public:
 
 		return multiplier * low + flag;
 	}
+};
+
+// Signed number with unsigned number(two's complement)
+struct sint {
+	uint16_t num;
+
+	signed short val() const {
+		if (num & 0x8000) {
+			return -(signed short)((~num)) - 1;
+		}
+		return (signed short)num;
+	}
+	void signedToSint(signed short num) {
+		this->num = static_cast<uint16_t>(num);
+	}
+};
+
+// Bitfield testing
+struct Flags {
+	unsigned ready : 1;
+	unsigned error : 1;
 };
 
 uint8_t parseByte(std::string s) {
