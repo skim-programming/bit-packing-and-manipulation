@@ -68,3 +68,81 @@ uint8_t parseByte(std::string s) {
 	}
 	return result;
 }
+
+struct ob {
+    private: uint64_t data = 0;
+    
+    public:
+    std::bitset<sizeof(data)*8> writeData(decltype(data) val) { // Only write with 0bXXXXXXXX
+        data = val;
+        return std::bitset<sizeof(data)*8>(data);
+    }
+    std::bitset<sizeof(data)*8> setFlag(decltype(data) index){
+        data = data ^ 1 << index /*% (sizeof(data)*8)*/;
+        return std::bitset<sizeof(data)*8>(data);
+    }
+    decltype(data) readData() const {
+        return data;
+    }
+    std::bitset<sizeof(data)*8> readBs() const {
+        return std::bitset<sizeof(data)*8>(data);
+    }
+    std::ostringstream returnFlags() const {
+        std::ostringstream out;
+        std::bitset<sizeof(data)*8> bs = data;
+        for(decltype(data) i = 0; i < sizeof(data) * 8; i++){
+            if(bs[i]){
+                out << "flag " << i << " set\n";
+            }
+        }
+        return out;
+    }
+    bool getFlag(decltype(data) index) const {
+        if(data & 1 << index/*%(sizeof(data)*8)*/){
+            return true;
+        }
+        return false;
+    }
+    static decltype(data) getType(){
+        return decltype(data)(0);
+    }
+    ob() = default;
+    ob(decltype(data) data_) {(void)this->writeData(data_);};
+};
+
+struct sf{
+    ob bytes[4];
+    uint32_t btott(){
+        uint32_t out = 0;
+        for(int i = sizeof(bytes)-1; i>=0; i--){
+            out |= (uint32_t)bytes[i].readData() << 8*i;
+        }
+        return out;
+    }
+    template <typename T>
+    sf tttob(T inp){
+        decltype(ob::getType()) in = static_cast<decltype(ob::getType())>(inp);
+        sf out;
+        int partition = (sizeof(in)*8)/(sizeof(ob::getType())*8);
+        std::cout << (sizeof(in)*8)/(sizeof(ob::getType())*8) << "\n";
+        int inc = sizeof(in)*8/partition;
+        std::cout << inc << "\n";
+        for(int i = 0; i<partition; i++){
+            out[i] = (decltype(ob::getType()))((in >> inc * i) & ~(decltype(ob::getType()))(0));
+        }
+        return out;
+    }
+    friend std::ostream& operator<<(std::ostream& os, sf const& save){
+        for(int i = sizeof(bytes)/sizeof(ob::getType())-1; i>=0; i--){
+            os << save.bytes[i].readBs() << " \n";
+        }
+        return os;
+    }
+    ob& operator[](int index){
+        return bytes[index];
+    }
+    const ob& operator[](int index) const{
+        return bytes[index];
+    }
+};
+
